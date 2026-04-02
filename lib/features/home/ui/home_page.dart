@@ -18,6 +18,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     return AppLayout(
+      showAppBar: true,
       currentIndex: 0,
       onTabChange: (index) {},
       child: Column(

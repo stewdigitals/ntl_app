@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ntl_app/features/home/ui/home_page.dart';
+import 'package:ntl_app/features/profile/ui/pages/testing_report_page.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
@@ -59,7 +59,7 @@ class MyApp extends StatelessWidget {
 
         cardColor: Colors.background,
       ),
-      home: HomePage(),
+      home: ReportsPage(),
     );
   }
 }

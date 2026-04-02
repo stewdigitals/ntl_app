@@ -6,26 +6,29 @@ class AppLayout extends StatelessWidget {
   final Widget child;
   final int currentIndex;
   final Function(int) onTabChange;
+  final bool showAppBar;
 
   const AppLayout({
     super.key,
     required this.child,
     required this.currentIndex,
     required this.onTabChange,
+    this.showAppBar = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SizedBox.expand(
-        // 🔥 ensures full screen
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.only(top: 90, bottom: 70),
-              child: SingleChildScrollView(child: child),
+              padding: EdgeInsets.only(top: showAppBar ? 90 : 0, bottom: 60),
+              child: child,
             ),
-            const CustomAppBar(),
+
+            if (showAppBar) const CustomAppBar(),
+
             Positioned(
               bottom: 0,
               left: 0,

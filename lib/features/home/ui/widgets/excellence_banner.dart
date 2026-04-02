@@ -28,10 +28,10 @@ class ExcellenceBanner extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
               Text(
-                "Over 25 years of excellence in\nprecious metal testing.",
+                "Over 25 years of excellence in precious metal testing.",
                 style: TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w900,
                   color: Colors.white,
                   height: 1.3,
                 ),

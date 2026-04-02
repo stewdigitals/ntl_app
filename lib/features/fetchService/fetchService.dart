@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable, file_names
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 // import 'package:stew_bin_app/features/auth/provider/auth_provider.dart';

@@ -24,7 +24,7 @@ class ServiceCard extends StatelessWidget {
     this.bgColor = Colors.white,
     this.titleColor = Colors.black,
     this.subtitleColor = Colors.grey,
-    this.iconColor = Colors.primary,
+    this.iconColor = Colors.black,
     this.borderColor = Colors.transparent,
     this.iconBgColor = Colors.transparent,
     this.onTap,

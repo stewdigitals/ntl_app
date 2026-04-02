@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, file_names
+
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 // import 'package:stew_bin_app/features/auth/provider/auth_provider.dart';

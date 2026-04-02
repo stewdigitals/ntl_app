@@ -9,7 +9,7 @@ class CustomAppBar extends ConsumerWidget {
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 30, 12, 10),
+        padding: const EdgeInsets.fromLTRB(12, 30, 12, 18),
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
