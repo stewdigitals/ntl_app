@@ -1,29 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:ntl_app/core/components/button.dart';
 import 'package:ntl_app/core/components/custom_topbar.dart';
-import 'package:ntl_app/core/components/horizontal_card.dart';
-import 'package:ntl_app/features/service/store/service.dart';
+import 'package:ntl_app/core/components/video_provider.dart';
 
 class ServiceDetailsPage extends StatelessWidget {
   final String title;
+  final String subtitle;
   final String image;
-  final List<TagItem> tags;
+  final String tags;
   final String description;
-  final List<BenefitItem> benefits;
-  final List<StepItem> steps;
-  final List<AnalysisItem> analysis;
+  final String? videoUrl;
   final String buttonText;
   final VoidCallback onButtonTap;
 
   const ServiceDetailsPage({
     super.key,
     required this.title,
+    required this.subtitle,
     required this.image,
     required this.tags,
     required this.description,
-    required this.benefits,
-    required this.steps,
-    required this.analysis,
+    this.videoUrl,
     required this.buttonText,
     required this.onButtonTap,
   });
@@ -33,13 +30,13 @@ class ServiceDetailsPage extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
+          // 🔝 TOP BAR
           Container(
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 12,
-                  offset: const Offset(0, 0),
                 ),
               ],
             ),
@@ -52,27 +49,29 @@ class ServiceDetailsPage extends StatelessWidget {
               onRightTap: () {},
             ),
           ),
+
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 🎬 HERO
                   Stack(
                     children: [
-                      Image.asset(
+                      Image.network(
                         image,
-                        height: 250,
+                        height: 260,
                         width: double.infinity,
                         fit: BoxFit.cover,
                       ),
 
                       Container(
-                        height: 250,
+                        height: 260,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Colors.transparent,
-                              Colors.black.withValues(alpha: 0.8),
+                              Colors.black.withValues(alpha: 0.1),
+                              Colors.black.withValues(alpha: 0.85),
                             ],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
@@ -81,7 +80,7 @@ class ServiceDetailsPage extends StatelessWidget {
                       ),
 
                       Positioned(
-                        bottom: 16,
+                        bottom: 20,
                         left: 16,
                         right: 16,
                         child: Column(
@@ -89,36 +88,49 @@ class ServiceDetailsPage extends StatelessWidget {
                           children: [
                             Text(
                               title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 25,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
+                            const SizedBox(height: 6),
 
-                            const SizedBox(height: 8),
+                            Text(
+                              subtitle,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                            ),
+
+                            const SizedBox(height: 10),
 
                             Wrap(
                               spacing: 8,
-                              children: tags.map((tag) {
+                              runSpacing: 8,
+                              children: tags.split(',').map((tag) {
                                 return Container(
-                                  padding: EdgeInsets.symmetric(
+                                  padding: const EdgeInsets.symmetric(
                                     horizontal: 10,
-                                    vertical: 4,
+                                    vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                    borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
-                                      color: tag.borderColor,
-                                      width: 1,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.5,
+                                      ),
                                     ),
-                                    color: tag.color,
-                                    borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
-                                    tag.text,
-                                    style: TextStyle(
-                                      color: tag.textColor,
-                                      fontSize: 14,
+                                    tag.trim(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.w900,
                                     ),
                                   ),
@@ -134,233 +146,54 @@ class ServiceDetailsPage extends StatelessWidget {
                   // 📄 DESCRIPTION
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Text(
-                      description,
-                      style: const TextStyle(height: 1.6, fontSize: 17),
-                    ),
-                  ),
-
-                  SizedBox(height: 10),
-
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      "Core Benefits",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  ...benefits.map(
-                    (e) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: HorizontalCard(
-                        title: e.title,
-                        subtitle: e.desc,
-                        icon: e.icon,
-                        iconColor: Colors.amber,
-                        iconBg: const Color(0xFFF5EFE4),
-                        showCardShadow: true,
-                        showIconShadow: false,
-                        showArrow: false,
-                        showBorder: false,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // 🔢 STEPS
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      "How it Works",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  ...List.generate(steps.length, (i) {
-                    final s = steps[i];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.primary,
-                            child: Text(
-                              "0${i + 1}",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  s.title,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                Text(
-                                  s.desc,
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                              ],
-                            ),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
                           ),
                         ],
                       ),
-                    );
-                  }),
-
-                  const SizedBox(height: 20),
-
-                  // 📊 ANALYSIS
-                  Container(
-                    margin: const EdgeInsets.all(16),
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0F172A),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 🔶 HEADER
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: const [
-                                      Text(
-                                        "Spectral Analysis Output",
-                                        style: TextStyle(
-                                          color: Colors.accent,
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        "Real-time elemental distribution",
-                                        style: TextStyle(
-                                          color: Colors.icon,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Icon(
-                                    Icons.bar_chart,
-                                    color: Color(0xFFEAB308),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 30),
-
-                              // 📊 DATA LIST
-                              ...analysis.map((e) {
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          e.name,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                        ),
-                                        Text(
-                                          "${e.value}%",
-                                          style: TextStyle(
-                                            color: e.color,
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 10),
-
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: LinearProgressIndicator(
-                                        value: e.value / 100,
-                                        minHeight: 12,
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: e.color,
-                                        backgroundColor: Colors.white12,
-                                      ),
-                                    ),
-
-                                    const SizedBox(height: 16),
-                                  ],
-                                );
-                              }),
-
-                              const SizedBox(height: 15),
-
-                              Container(height: 1, color: Colors.white12),
-
-                              const SizedBox(height: 15),
-                            ],
-                          ),
+                      child: Text(
+                        description,
+                        style: const TextStyle(
+                          height: 1.6,
+                          fontSize: 15,
+                          color: Colors.black87,
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: const [
-                            Text(
-                              "Analyzer SN: XRF-9921-BT",
-                              style: TextStyle(
-                                color: Colors.white38,
-                                fontSize: 11,
-                              ),
-                            ),
-                            Text(
-                              "Confidence Level: High",
-                              style: TextStyle(
-                                color: Colors.white38,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                      ),
                     ),
                   ),
+
+                  // 🎥 VIDEO SECTION
+                  if (videoUrl != null && videoUrl!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Watch Service",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: UniversalVideoPlayer(url: videoUrl!),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -371,7 +204,9 @@ class ServiceDetailsPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             child: CustomElevatedButton(
               text: buttonText,
-              onPressed: onButtonTap,
+              onPressed: () async {
+                onButtonTap();
+              },
             ),
           ),
         ],

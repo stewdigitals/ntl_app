@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ntl_app/core/components/custom_topbar.dart';
 import 'package:ntl_app/core/components/horizontal_card.dart';
 import 'package:ntl_app/core/layout/layout.dart';
+import 'package:ntl_app/features/auth/signup/provider/signup_provider.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return AppLayout(
-      currentIndex: 4,
-      onTabChange: (index) {},
-
       child: Column(
         children: [
           CustomTopAppBar(
@@ -229,24 +228,45 @@ class MenuList extends StatelessWidget {
   }
 }
 
-class SignOutButton extends StatelessWidget {
+class SignOutButton extends ConsumerWidget {
   const SignOutButton({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return TextButton.icon(
-      onPressed: () {},
+      onPressed: () async {
+        final confirm = await showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text("Sign Out"),
+            content: const Text("Are you sure you want to sign out?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Sign Out"),
+              ),
+            ],
+          ),
+        );
+
+        if (confirm == true) {
+          await ref.read(authProvider).logout(context);
+        }
+      },
       icon: const Icon(
         Icons.logout,
-        color: Colors.primary,
-        fontWeight: FontWeight.w900,
+        color: Colors.red, // ✅ fixed
       ),
       label: const Text(
         "Sign Out",
         style: TextStyle(
-          color: Colors.primary,
+          color: Colors.red, // ✅ fixed
           fontSize: 16,
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

@@ -57,6 +57,8 @@ class ServiceCard extends StatelessWidget {
           // 📝 TITLE
           Text(
             title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: titleColor,
               fontWeight: FontWeight.w600,
@@ -69,6 +71,8 @@ class ServiceCard extends StatelessWidget {
           // 📄 SUBTITLE
           Text(
             subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(color: subtitleColor, fontSize: 12, height: 1.4),
           ),
         ],

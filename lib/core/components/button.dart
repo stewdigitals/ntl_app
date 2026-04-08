@@ -8,7 +8,7 @@ class CustomElevatedButton extends StatefulWidget {
   });
 
   final String text;
-  final VoidCallback onPressed;
+  final Future<void> Function()? onPressed;
 
   @override
   State<CustomElevatedButton> createState() => _CustomElevatedButtonState();
@@ -37,7 +37,11 @@ class _CustomElevatedButtonState extends State<CustomElevatedButton> {
       ),
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: widget.onPressed,
+        onPressed: widget.onPressed == null
+            ? null
+            : () async {
+                await widget.onPressed!();
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.primary,
           padding: const EdgeInsets.symmetric(vertical: 16),

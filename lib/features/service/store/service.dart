@@ -1,46 +1,31 @@
-import 'package:flutter/material.dart';
-
-class TagItem {
-  final String text;
-  final Color textColor;
-  final Color color;
-  final Color borderColor;
-
-  const TagItem({
-    required this.text,
-    required this.textColor,
-    required this.color,
-    required this.borderColor,
-  });
-}
-
-class BenefitItem {
-  final IconData icon;
+class ServiceModel {
+  final String id;
   final String title;
-  final String desc;
+  final String subtitle;
+  final String image;
+  final String description;
+  final String tags;
+  final String? videoUrl;
 
-  const BenefitItem({
-    required this.icon,
+  ServiceModel({
+    required this.id,
     required this.title,
-    required this.desc,
+    required this.subtitle,
+    required this.image,
+    required this.description,
+    required this.tags,
+    this.videoUrl,
   });
-}
 
-class StepItem {
-  final String title;
-  final String desc;
-
-  const StepItem({required this.title, required this.desc});
-}
-
-class AnalysisItem {
-  final String name;
-  final double value;
-  final Color color;
-
-  const AnalysisItem({
-    required this.name,
-    required this.value,
-    required this.color,
-  });
+  factory ServiceModel.fromJson(Map<String, dynamic> json) {
+    return ServiceModel(
+      id: json['_id'] ?? '',
+      title: json['title'] ?? '',
+      subtitle: json['subtitle'] ?? '',
+      image: json['imgUrl'] ?? '',
+      description: json['description'] ?? '',
+      tags: json['tags'] ?? '',
+      videoUrl: json['videoUrl'],
+    );
+  }
 }

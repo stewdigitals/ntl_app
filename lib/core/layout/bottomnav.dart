@@ -1,42 +1,7 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
-
-  @override
-  State<MainScreen> createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen> {
-  int currentIndex = 0;
-
-  final pages = const [
-    Center(child: Text("Home")),
-    Center(child: Text("Services")),
-    Center(child: Text("Bookings")),
-    Center(child: Text("Reports")),
-    Center(child: Text("Profile")),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: pages[currentIndex],
-
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: currentIndex,
-        onTap: (index) {
-          setState(() {
-            currentIndex = index;
-          });
-        },
-      ),
-    );
-  }
-}
-
-class CustomBottomNavBar extends ConsumerWidget {
+class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
 
@@ -47,48 +12,66 @@ class CustomBottomNavBar extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(0, 8, 0, 30),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildItem(Icons.home, "Home", 0),
-          _buildItem(Icons.grid_view, "Services", 1),
-          _buildItem(Icons.calendar_today, "Bookings", 2),
-          _buildItem(Icons.description, "Reports", 3),
-          _buildItem(Icons.person, "Profile", 4),
-        ],
+      margin: const EdgeInsets.all(12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _item(Icons.home, "Home", 0),
+                _item(Icons.grid_view, "Services", 1),
+                _item(Icons.calendar_today, "Bookings", 2),
+                _item(Icons.description, "Reports", 3),
+                _item(Icons.person, "Profile", 4),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildItem(IconData icon, String label, int index) {
+  Widget _item(IconData icon, String label, int index) {
     final isActive = currentIndex == index;
 
-    return GestureDetector(
+    return InkWell(
       onTap: () => onTap(index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: isActive ? Colors.red : Colors.grey),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: isActive ? Colors.red : Colors.grey,
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive
+              ? Colors.red.withValues(alpha: 0.2)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: isActive ? Colors.primary : Colors.secondary),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: isActive ? Colors.primary : Colors.secondary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -61,8 +61,6 @@ class _ServicePageState extends ConsumerState<ServicePage> {
   Widget build(BuildContext context) {
     return AppLayout(
       showAppBar: false,
-      currentIndex: 1,
-      onTabChange: (index) {},
       child: SafeArea(
         top: false,
         child: Column(

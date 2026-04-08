@@ -3,23 +3,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ntl_app/core/components/button.dart';
-import 'package:ntl_app/core/layout/layout.dart';
-import 'package:ntl_app/features/auth/otp-verification.dart/ui/otp_page.dart';
+import 'package:ntl_app/features/auth/login/ui/login_page.dart';
 import 'package:ntl_app/features/auth/signup/state/auth_notifier.dart';
 import 'package:ntl_app/features/auth/signup/ui/signup_page.dart';
-import 'package:ntl_app/features/home/ui/home_page.dart';
 
-class LoginPage extends ConsumerStatefulWidget {
-  const LoginPage({super.key});
+class ResetPasswordPage extends ConsumerStatefulWidget {
+  final String email;
+
+  const ResetPasswordPage({super.key, required this.email});
 
   @override
-  ConsumerState<LoginPage> createState() => _LoginPageState();
+  ConsumerState<ResetPasswordPage> createState() => _ResetPasswordPageState();
 }
 
-class _LoginPageState extends ConsumerState<LoginPage> {
-  final emailController = TextEditingController();
+class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
   bool isPasswordVisible = false;
+  bool isConfirmPasswordVisible = false;
 
   void showSnack(String message) {
     ScaffoldMessenger.of(
@@ -29,32 +31,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(authNotifierProvider);
+
     ref.listen(authNotifierProvider, (previous, next) {
       if (next.error != null) {
         showSnack(next.error!);
       }
-      if (next.action == "login") {
-        showSnack("Login Successful 🎉");
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const MainScreen()),
-        );
-      }
+      if (!next.isLoading && next.data != null) {
+        if (next.action == "forgotPassword") {
+          showSnack("OTP Sent 📩");
+        }
 
-      if (next.action == "forgotPassword") {
-        showSnack("OTP Sent Successfully 🎉");
+        if (next.action == "resetPassword") {
+          showSnack("Password Changed Successfully 🎉");
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                OTPPage(email: emailController.text, flow: "forgotPassword"),
-          ),
-        );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => LoginPage()),
+          ); // or go to login
+        }
+
+        ref.read(authNotifierProvider.notifier).clearState();
       }
     });
-    final state = ref.watch(authNotifierProvider);
     return Scaffold(
       backgroundColor: const Color(0xFFF8F6F6),
       body: SafeArea(
@@ -99,115 +99,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
               const SizedBox(height: 8),
 
-              const Text(
-                "Login to your customer account to access\ntouch testing reports",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.text,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 15,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              /// 📱 Input Label
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Email",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: Colors.heading,
-                    fontSize: 15,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              /// 🧾 Input Field
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  hintText: "e.g. name@mail.com",
-                  prefixIcon: const Icon(
-                    Icons.person_outline,
-                    color: Colors.icon,
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
-
-                  /// 👇 Default border
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(0xFFE2E8F0),
-                      width: 1, // ❗ increase this
-                    ),
-                  ),
-
-                  /// 👇 When not focused
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(0xFFE2E8F0),
-                      width: 1,
-                    ),
-                  ),
-
-                  /// 👇 When focused
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Colors.red, // 👈 your primary color
-                      width: 1.5,
-                    ),
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 15),
-
-              /// 🔐 Password Label
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
                 children: [
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Password",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        color: Colors.heading,
-                        fontSize: 15,
-                      ),
+                  Text(
+                    "Changing password for",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.text,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      ref
-                          .read(authNotifierProvider.notifier)
-                          .forgotPassword(
-                            email: emailController.text,
-                            context: context,
-                          );
-                    },
-                    child: const Text(
-                      "Forgot Password",
-                      style: TextStyle(
-                        color: Colors.primary,
-                        fontWeight: FontWeight.w900,
-                      ),
+                  Text(
+                    widget.email,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.primary,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 30),
 
-              /// 🔐 Password Field
+              /// 🔐 New Password
               TextField(
                 controller: passwordController,
                 obscureText: !isPasswordVisible,
@@ -261,25 +176,91 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-              /// 🔴 Login Button
+              /// 🔐 Confirm Password
+              TextField(
+                controller: confirmPasswordController,
+                obscureText: !isConfirmPasswordVisible,
+                decoration: InputDecoration(
+                  hintText: "Enter your password",
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  filled: true,
+                  fillColor: Colors.white,
+
+                  /// 👇 Default border
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFE2E8F0),
+                      width: 1, // ❗ increase this
+                    ),
+                  ),
+
+                  /// 👇 When not focused
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFE2E8F0),
+                      width: 1,
+                    ),
+                  ),
+
+                  /// 👇 When focused
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.red, // 👈 your primary color
+                      width: 1.5,
+                    ),
+                  ),
+
+                  /// 👁️ Eye Toggle Button
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      isConfirmPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        isConfirmPasswordVisible = !isConfirmPasswordVisible;
+                      });
+                    },
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 25),
+
+              /// 🔴 Reset Button
               CustomElevatedButton(
-                text: state.isLoading ? "Logging in..." : "Login",
+                text: state.isLoading ? "Processing..." : "Reset Password",
                 onPressed: state.isLoading
                     ? null
                     : () async {
-                        final email = emailController.text.trim();
                         final password = passwordController.text.trim();
+                        final confirmPassword = confirmPasswordController.text
+                            .trim();
 
-                        if (email.isEmpty || password.isEmpty) {
-                          showSnack("Email and password required");
+                        if (password.isEmpty || confirmPassword.isEmpty) {
+                          showSnack("All fields required");
+                          return;
+                        }
+
+                        if (password != confirmPassword) {
+                          showSnack("Passwords do not match");
                           return;
                         }
 
                         await ref
                             .read(authNotifierProvider.notifier)
-                            .login(email: email, password: password);
+                            .resetPassword(
+                              email: widget.email,
+                              newPassword: password,
+                              context: context,
+                            );
                       },
               ),
 

@@ -6,6 +6,8 @@ import 'package:ntl_app/features/home/ui/widgets/excellence_banner.dart';
 import 'package:ntl_app/features/home/ui/widgets/home_banner.dart';
 import 'package:ntl_app/features/home/ui/widgets/price_slider.dart';
 import 'package:ntl_app/features/home/ui/widgets/stats_card.dart';
+import 'package:ntl_app/features/service/provider/service_notifier.dart';
+import 'package:ntl_app/features/service/service_details/pages/service_details_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -16,21 +18,35 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(servicesProvider.notifier).fetchServices();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AppLayout(
       showAppBar: true,
-      currentIndex: 0,
-      onTabChange: (index) {},
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
           PriceSlider(),
-          AssayBanner(),
-          StatsCard(),
-          SizedBox(height: 10),
-          _buildActionGrid(),
-          buildServices(),
-          ExcellenceBanner(),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  AssayBanner(),
+                  StatsCard(),
+                  SizedBox(height: 10),
+                  _buildActionGrid(),
+                  buildServices(),
+                  SizedBox(height: 10),
+                  ExcellenceBanner(),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -123,6 +139,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget buildServices() {
+    final state = ref.watch(servicesProvider);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -151,57 +168,45 @@ class _HomePageState extends ConsumerState<HomePage> {
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+            physics: NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
             mainAxisSpacing: 12,
             crossAxisSpacing: 12,
             childAspectRatio: 1.2,
-            children: [
-              ServiceCard(
-                title: "Gold Assay",
-                subtitle: "Fire assay analysis for 99.9% purity verification.",
-                icon: Icons.workspace_premium,
-                bgColor: const Color(0xFFFDECEC),
-                titleColor: Colors.primary,
-                iconColor: Colors.primary,
-                borderColor: Colors.primary.withValues(alpha: 0.1),
-                iconBgColor: Colors.transparent,
-                onTap: () {},
-              ),
-
-              ServiceCard(
-                title: "Silver Assay",
-                subtitle: "Accurate silver content determination.",
-                icon: Icons.circle,
-                bgColor: const Color(0xFFFFF6DB),
-                titleColor: Color(0xFFD4AF35),
-                subtitleColor: Color(0xFF4C4C4C),
-                iconColor: Color(0xFFD4AF35),
-                borderColor: Color(0xFFD4AF35).withValues(alpha: 0.2),
-                iconBgColor: Colors.transparent,
-              ),
-
-              ServiceCard(
-                title: "Computer Touch",
-                subtitle: "XRF non-destructive laser spectroscopy.",
-                icon: Icons.computer,
-                bgColor: Colors.primary.withValues(alpha: 0.05),
-                titleColor: Colors.primary,
-                iconColor: Colors.primary,
-                borderColor: Colors.primary.withValues(alpha: 0.1),
-                iconBgColor: Colors.transparent,
-              ),
-
-              ServiceCard(
-                title: "Hallmarking",
-                subtitle: "BIS certified laser marking services.",
-                icon: Icons.verified,
-                bgColor: Colors.primary.withValues(alpha: 0.05),
-                titleColor: Colors.primary,
-                iconColor: Colors.primary,
-                borderColor: Colors.primary.withValues(alpha: 0.1),
-                iconBgColor: Colors.transparent,
-              ),
-            ],
+            children: state.isLoading
+                ? List.generate(
+                    4,
+                    (_) => const Center(child: CircularProgressIndicator()),
+                  )
+                : state.data.map((service) {
+                    return ServiceCard(
+                      title: service.title,
+                      subtitle: service.subtitle,
+                      icon: Icons.miscellaneous_services,
+                      bgColor: Colors.primary.withValues(alpha: 0.05),
+                      titleColor: Colors.primary,
+                      iconColor: Colors.primary,
+                      borderColor: Colors.primary.withValues(alpha: 0.1),
+                      iconBgColor: Colors.transparent,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ServiceDetailsPage(
+                              title: service.title,
+                              subtitle: service.subtitle,
+                              image: service.image,
+                              tags: service.tags,
+                              description: service.description,
+                              videoUrl: service.videoUrl,
+                              buttonText: "Book Service",
+                              onButtonTap: () {},
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }).toList(),
           ),
         ],
       ),

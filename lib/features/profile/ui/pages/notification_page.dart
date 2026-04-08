@@ -16,8 +16,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
     return AppLayout(
-      onTabChange: (index) {},
-      currentIndex: 4,
       child: SafeArea(
         top: false,
         child: Column(

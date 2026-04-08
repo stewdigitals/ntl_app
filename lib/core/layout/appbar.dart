@@ -22,9 +22,7 @@ class CustomAppBar extends ConsumerWidget {
         child: Row(
           children: [
             Image.asset("assets/horizontal_logo.png", height: 40),
-
             const Spacer(),
-
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(

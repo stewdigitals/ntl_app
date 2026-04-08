@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ntl_app/features/profile/ui/pages/testing_report_page.dart';
+import 'package:ntl_app/core/layout/layout.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
@@ -32,7 +32,6 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
-        /// 🌟 Apply font globally
         textTheme: GoogleFonts.spaceGroteskTextTheme(baseTheme.textTheme),
         primaryTextTheme: GoogleFonts.spaceGroteskTextTheme(
           baseTheme.primaryTextTheme,
@@ -59,7 +58,7 @@ class MyApp extends StatelessWidget {
 
         cardColor: Colors.background,
       ),
-      home: ReportsPage(),
+      home: MainScreen(),
     );
   }
 }

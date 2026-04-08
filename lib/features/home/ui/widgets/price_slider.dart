@@ -13,7 +13,6 @@ class _PriceSliderState extends State<PriceSlider> {
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startAutoScroll();
     });
@@ -76,7 +75,6 @@ class _PriceSliderState extends State<PriceSlider> {
 
             const SizedBox(width: 10),
 
-            // 🔥 THIS IS THE FIX
             Expanded(
               child: ListView(
                 controller: _scrollController,
@@ -85,8 +83,6 @@ class _PriceSliderState extends State<PriceSlider> {
                   _priceItem("Gold", "₹6234", true),
                   _priceItem("Silver", "₹72", false),
                   _priceItem("Platinum", "₹2450", true),
-
-                  // duplicate for loop illusion
                   _priceItem("Gold", "₹6234", true),
                   _priceItem("Silver", "₹72", false),
                   _priceItem("Platinum", "₹2450", true),

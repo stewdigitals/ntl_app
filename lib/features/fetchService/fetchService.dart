@@ -66,26 +66,19 @@ class FetchService {
       final data = e.response?.data;
 
       debugPrint('❌ API ERROR [$method $path]');
+      debugPrint('TYPE: ${e.type}');
+      debugPrint('MESSAGE: ${e.message}');
       debugPrint('Status: $statusCode');
       debugPrint('Data: $data');
 
-      // 🔥 CRITICAL PART
-
-      if (statusCode == 401) {
-        debugPrint('⛔ TOKEN EXPIRED DETECTED IN FETCH SERVICE');
-
-        final message = (data is Map && data['message'] != null)
-            ? data['message'].toString()
-            : 'Session expired';
-
-        // throw TokenExpiredException(message);
+      if (e.type == DioExceptionType.connectionError) {
+        throw ApiException(message: "Cannot connect to server");
       }
 
-      if (statusCode == 401) {
-        debugPrint('🔥 STEP 1: 401 RECEIVED');
+      if (statusCode == null) {
+        throw ApiException(message: "No response from server");
       }
 
-      // Other API errors
       final error = _handleError(e);
       throw error;
     }

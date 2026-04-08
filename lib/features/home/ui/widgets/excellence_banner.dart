@@ -6,7 +6,7 @@ class ExcellenceBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 30),
+      margin: const EdgeInsets.only(left: 16, right: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFFE31E24),

@@ -1,0 +1,168 @@
+// ignore_for_file: unnecessary_import, use_build_context_synchronously
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:ntl_app/features/auth/login/ui/login_page.dart';
+import 'package:ntl_app/features/auth/signup/provider/signup_provider.dart';
+import 'package:ntl_app/features/auth/signup/state/signup_state.dart';
+import 'package:ntl_app/features/auth/signup/store/signup.dart';
+
+import 'package:ntl_app/features/fetchService/fetchService.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+final authNotifierProvider =
+    StateNotifierProvider<AuthNotifier, AuthState<AuthResponseModel>>((ref) {
+      final auth = ref.read(authProvider);
+      return AuthNotifier(auth);
+    });
+
+class AuthNotifier extends StateNotifier<AuthState<AuthResponseModel>> {
+  final AuthProvider _authProvider;
+
+  AuthNotifier(this._authProvider) : super(AuthState<AuthResponseModel>());
+
+  void clearState() {
+    state = AuthState<AuthResponseModel>();
+  }
+
+  Future<void> register({
+    required String email,
+    required String password,
+    required String name,
+    required String phone,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final res = await _authProvider.register(
+        email: email,
+        password: password,
+        name: name,
+        phone: phone,
+      );
+
+      state = state.copyWith(isLoading: false, data: res, action: "register");
+    } on ApiException catch (e) {
+      state = state.copyWith(isLoading: false, error: e.message);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: "Something went wrong");
+    }
+  }
+
+  Future<void> resendOtp({required String email}) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final res = await _authProvider.resendOtp(email: email);
+
+      state = state.copyWith(isLoading: false, data: res, action: "resendOtp");
+      debugPrint("Resend OTP 🎉");
+      debugPrint("Resend OTP ${state.data?.token}");
+    } on ApiException catch (e) {
+      state = state.copyWith(isLoading: false, error: e.message);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: "Resend OTP failed");
+    }
+  }
+
+  Future<void> resetPassword({
+    required String email,
+    required String newPassword,
+    required BuildContext context,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final res = await _authProvider.resetPassword(
+        email: email,
+        newPassword: newPassword,
+        context: context,
+      );
+
+      state = state.copyWith(
+        isLoading: false,
+        data: res,
+        action: "resetPassword",
+      );
+      debugPrint("Reset Password 🎉");
+      debugPrint("Reset Password ${state.data?.token}");
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+    } on ApiException catch (e) {
+      state = state.copyWith(isLoading: false, error: e.message);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: "Reset Password failed");
+    }
+  }
+
+  Future<void> forgotPassword({
+    required String email,
+    required BuildContext context,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final res = await _authProvider.forgotPassword(email: email);
+
+      state = state.copyWith(
+        isLoading: false,
+        data: res,
+        action: "forgotPassword",
+      );
+      debugPrint("Forgot Password 🎉");
+      debugPrint("Forgot Password ${state.data?.token}");
+    } on ApiException catch (e) {
+      state = state.copyWith(isLoading: false, error: e.message);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: "Forgot Password failed");
+    }
+  }
+
+  Future<void> verifyOtp({
+    required String email,
+    required String otp,
+    required BuildContext context,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final res = await _authProvider.verifyOtp(email: email, otp: otp);
+
+      state = state.copyWith(isLoading: false, data: res, action: "verifyOtp");
+      debugPrint("OTP Verified 🎉");
+      debugPrint("OTP Verified ${state.data?.token}");
+    } on ApiException catch (e) {
+      state = state.copyWith(isLoading: false, error: e.message);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: "OTP verification failed",
+      );
+    }
+  }
+
+  Future<void> login({required String email, required String password}) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final res = await _authProvider.login(email: email, password: password);
+
+      // ✅ STORE TOKEN
+      final token = res.token;
+      if (token != null && token.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', token);
+        debugPrint("💾 TOKEN SAVED: $token");
+      }
+
+      state = state.copyWith(isLoading: false, data: res, action: "login");
+    } on ApiException catch (e) {
+      state = state.copyWith(isLoading: false, error: e.message);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: "Login failed");
+    }
+  }
+}
