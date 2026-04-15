@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, curly_braces_in_flow_control_structures
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ntl_app/core/components/button.dart';
 import 'package:ntl_app/core/components/custom_topbar.dart';
+import 'package:ntl_app/core/layout/layout.dart';
+import 'package:ntl_app/features/fetchService/app_logger.dart';
 import 'package:ntl_app/features/service/booking/provider/booking_provider.dart';
 import 'package:ntl_app/features/service/booking/store/booking.dart';
 import 'package:ntl_app/features/service/provider/service_notifier.dart';
@@ -18,7 +22,7 @@ class BookingPage extends ConsumerStatefulWidget {
 }
 
 class _BookingPageState extends ConsumerState<BookingPage> {
-  int selectedDay = 1;
+  int selectedDay = -1;
   String selectedTime = "11:00 AM";
   late List<DateTime> dates;
   String? selectedServiceId;
@@ -27,6 +31,24 @@ class _BookingPageState extends ConsumerState<BookingPage> {
   String? selectedJewelleryType;
   List<File> selectedImages = [];
   final ImagePicker _picker = ImagePicker();
+  final TextEditingController weightController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+
+  bool isPastSlot(String rawTime, DateTime selectedDate) {
+    final now = DateTime.now();
+
+    // convert slot "14:30" → DateTime
+    final parts = rawTime.split(":");
+    final slotDateTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+    );
+
+    return slotDateTime.isBefore(now);
+  }
 
   @override
   void initState() {
@@ -41,25 +63,18 @@ class _BookingPageState extends ConsumerState<BookingPage> {
     Future.microtask(() {
       ref.read(servicesProvider.notifier).fetchServices();
     });
+    Future.microtask(() {
+      ref.read(appointmentControllerProvider.notifier).fetchAppointments();
+    });
   }
 
   Future<void> pickImage(ImageSource source) async {
-    if (source == ImageSource.gallery) {
-      final pickedFiles = await _picker.pickMultiImage();
+    final picked = await _picker.pickImage(source: source);
 
-      if (pickedFiles != null && pickedFiles.isNotEmpty) {
-        setState(() {
-          selectedImages.addAll(pickedFiles.map((e) => File(e.path)));
-        });
-      }
-    } else {
-      final picked = await _picker.pickImage(source: source);
-
-      if (picked != null) {
-        setState(() {
-          selectedImages.add(File(picked.path));
-        });
-      }
+    if (picked != null) {
+      setState(() {
+        selectedImages = [File(picked.path)]; // ✅ only ONE image
+      });
     }
   }
 
@@ -138,6 +153,20 @@ class _BookingPageState extends ConsumerState<BookingPage> {
       ];
       return months[month - 1];
     }
+
+    final filteredSlots = selectedDate == null
+        ? []
+        : store.slots.where((slot) {
+            final rawTime = slot['slotTime'];
+
+            if (selectedDate!.day == DateTime.now().day &&
+                selectedDate!.month == DateTime.now().month &&
+                selectedDate!.year == DateTime.now().year) {
+              return !isPastSlot(rawTime, selectedDate!);
+            }
+
+            return true;
+          }).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
@@ -298,7 +327,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                                 isExpanded: true,
                                 icon: const Icon(Icons.keyboard_arrow_down),
 
-                                items: servicesState.data!.map((service) {
+                                items: servicesState.data.map((service) {
                                   return DropdownMenuItem(
                                     value: service.id,
                                     child: Row(
@@ -402,6 +431,62 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                     _dropdown("JEWELLERY TYPE"),
 
                     const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(
+                                Icons.scale,
+                                size: 18,
+                                color: Colors.primary,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                "Approx Weight",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          TextField(
+                            controller: weightController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              hintText: "Enter weight in grams (e.g. 10)",
+                              filled: true,
+                              fillColor: Colors.grey.shade50,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
 
                     Container(
                       padding: const EdgeInsets.all(14),
@@ -429,7 +514,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                               ),
                               SizedBox(width: 6),
                               Text(
-                                "Upload Jewellery Photos",
+                                "Upload Jewellery Photo",
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
@@ -439,122 +524,226 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                             ],
                           ),
 
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 14),
 
-                          // 📸 Upload Box
+                          // 📸 IMAGE AREA
                           GestureDetector(
                             onTap: showImageSourcePicker,
+
+                            // ONLY UI IMPROVEMENTS — same logic
                             child: AnimatedContainer(
-                              padding: const EdgeInsets.all(16),
-                              duration: const Duration(milliseconds: 200),
-                              height: 120,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                              height: 180,
+                              width: double.infinity,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(20),
+
+                                // ✨ Softer premium border
                                 border: Border.all(
                                   color: selectedImages.isNotEmpty
-                                      ? Colors.primary
-                                      : Colors.grey.shade300,
-                                  width: selectedImages.isNotEmpty ? 1.5 : 1,
+                                      ? Colors.blue.withValues(alpha: 0.6)
+                                      : Colors.grey.shade200,
+                                  width: 1.2,
                                 ),
-                                color: Colors.grey.shade50,
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.add_a_photo,
-                                    size: 32,
-                                    color: Colors.grey.shade500,
+
+                                // 🌫️ Glassy gradient
+                                gradient: selectedImages.isEmpty
+                                    ? LinearGradient(
+                                        colors: [
+                                          Colors.white,
+                                          const Color(0xFFF8F9FB),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      )
+                                    : null,
+
+                                // 🧊 Layered shadow (premium feel)
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.04),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
                                   ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    selectedImages.isEmpty
-                                        ? "Tap to upload photos"
-                                        : "Add more photos",
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 13,
+                                  if (selectedImages.isNotEmpty)
+                                    BoxShadow(
+                                      color: Colors.blue.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                      blurRadius: 25,
+                                      offset: const Offset(0, 12),
                                     ),
-                                  ),
                                 ],
                               ),
-                            ),
-                          ),
 
-                          // 🖼️ IMAGE PREVIEW LIST
-                          if (selectedImages.isNotEmpty) ...[
-                            const SizedBox(height: 14),
-
-                            SizedBox(
-                              height: 110,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: selectedImages.length,
-                                itemBuilder: (_, index) {
-                                  final image = selectedImages[index];
-
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 10),
-                                    child: Stack(
+                              child: selectedImages.isEmpty
+                                  ? Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        // 🖼️ Image card
+                                        // 🎯 Icon with soft background
+                                        Container(
+                                          padding: const EdgeInsets.all(14),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue.withValues(
+                                              alpha: 0.08,
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            Icons.add_a_photo_rounded,
+                                            size: 26,
+                                            color: Colors.blue.shade400,
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 12),
+
+                                        Text(
+                                          "Upload Photo",
+                                          style: TextStyle(
+                                            color: Colors.grey.shade800,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 4),
+
+                                        Text(
+                                          "Tap to browse",
+                                          style: TextStyle(
+                                            color: Colors.grey.shade500,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : Stack(
+                                      children: [
+                                        // 🖼️ Image
                                         ClipRRect(
                                           borderRadius: BorderRadius.circular(
-                                            12,
+                                            20,
                                           ),
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black
-                                                      .withValues(alpha: 0.08),
-                                                  blurRadius: 6,
-                                                  offset: const Offset(0, 2),
+                                          child: Image.file(
+                                            selectedImages.first,
+                                            height: double.infinity,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+
+                                        // 🌫️ Subtle overlay for readability
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Colors.transparent,
+                                                Colors.black.withValues(
+                                                  alpha: 0.25,
                                                 ),
                                               ],
-                                            ),
-                                            child: Image.file(
-                                              image,
-                                              height: 110,
-                                              width: 110,
-                                              fit: BoxFit.cover,
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
                                             ),
                                           ),
                                         ),
 
-                                        // ❌ Remove button
+                                        // 🔁 Replace (modern pill)
                                         Positioned(
-                                          top: 6,
-                                          right: 6,
+                                          bottom: 12,
+                                          left: 12,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 7,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.9,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                            child: const Text(
+                                              "Replace",
+                                              style: TextStyle(
+                                                color: Colors.black87,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+
+                                        // ❌ Remove (clean floating button)
+                                        Positioned(
+                                          bottom: 12,
+                                          right: 12,
                                           child: GestureDetector(
                                             onTap: () {
-                                              setState(() {
-                                                selectedImages.removeAt(index);
-                                              });
+                                              Navigator.push(
+                                                context,
+                                                PageRouteBuilder(
+                                                  pageBuilder: (_, _, _) =>
+                                                      ImagePreviewScreen(
+                                                        image: selectedImages
+                                                            .first,
+                                                      ),
+                                                  transitionsBuilder:
+                                                      (_, animation, _, child) {
+                                                        return FadeTransition(
+                                                          opacity: animation,
+                                                          child: child,
+                                                        );
+                                                      },
+                                                ),
+                                              );
                                             },
                                             child: Container(
-                                              padding: const EdgeInsets.all(6),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 7,
+                                                  ),
                                               decoration: BoxDecoration(
-                                                color: Colors.black.withValues(
-                                                  alpha: 0.6,
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.9,
                                                 ),
-                                                shape: BoxShape.circle,
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
                                               ),
-                                              child: const Icon(
-                                                Icons.close,
-                                                size: 14,
-                                                color: Colors.white,
+                                              child: const Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.visibility,
+                                                    size: 14,
+                                                    color: Colors.black87,
+                                                  ),
+                                                  SizedBox(width: 4),
+                                                  Text(
+                                                    "Preview",
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Colors.black87,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ),
                                         ),
                                       ],
                                     ),
-                                  );
-                                },
-                              ),
                             ),
-                          ],
+                          ),
 
                           const SizedBox(height: 10),
 
@@ -569,7 +758,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                               SizedBox(width: 6),
                               Expanded(
                                 child: Text(
-                                  "Upload clear images for accurate testing",
+                                  "Upload a clear image for accurate testing",
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey,
@@ -792,35 +981,39 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                           // 🧠 EMPTY STATE
                           Skeletonizer(
                             enabled: state.isLoading, // 👈 slots loading
-                            child: store.slots.isEmpty
-                                ? GridView.builder(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: 6, // fake skeleton items
-                                    gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 3,
-                                          crossAxisSpacing: 10,
-                                          mainAxisSpacing: 10,
-                                          childAspectRatio: 1.4,
+                            child: selectedDate == null
+                                ? const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(20),
+                                      child: Text(
+                                        "Select a date to view slots 📅",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.w500,
                                         ),
-                                    itemBuilder: (_, __) {
-                                      return Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey.shade300,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
+                                      ),
+                                    ),
+                                  )
+                                : store.slots.isEmpty && !state.isLoading
+                                ? const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(20),
+                                      child: Text(
+                                        "No slots available 😔",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.w500,
                                         ),
-                                      );
-                                    },
+                                      ),
+                                    ),
                                   )
                                 : GridView.builder(
                                     shrinkWrap: true,
                                     physics:
                                         const NeverScrollableScrollPhysics(),
-                                    itemCount: store.slots.length,
+                                    itemCount: filteredSlots.length,
                                     gridDelegate:
                                         const SliverGridDelegateWithFixedCrossAxisCount(
                                           crossAxisCount: 3,
@@ -829,9 +1022,21 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                                           childAspectRatio: 1.4,
                                         ),
                                     itemBuilder: (_, index) {
-                                      final slot = store.slots[index];
+                                      final slot = filteredSlots[index];
 
                                       final rawTime = slot['slotTime'];
+
+                                      // ❌ skip past slots if today
+                                      if (selectedDate != null &&
+                                          selectedDate!.day ==
+                                              DateTime.now().day &&
+                                          selectedDate!.month ==
+                                              DateTime.now().month &&
+                                          selectedDate!.year ==
+                                              DateTime.now().year &&
+                                          isPastSlot(rawTime, selectedDate!)) {
+                                        return const SizedBox.shrink();
+                                      }
                                       final displayTime = formatTime(rawTime);
 
                                       final booked = slot['bookedCount'];
@@ -1010,6 +1215,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
 
                           // ✍️ Text Field
                           TextField(
+                            controller: descriptionController,
                             maxLines: 4,
                             style: const TextStyle(fontSize: 14),
                             decoration: InputDecoration(
@@ -1079,24 +1285,45 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 32),
             child: CustomElevatedButton(
               text: "Confirm Appointment",
-              onPressed: () async {
-                await controller.createAppointment({
-                  "serviceId": selectedServiceId,
-                  "jewelleryType": selectedJewelleryType,
-                  "appointmentDate": formatDate(selectedDate!),
-                  "slotTime": selectedSlotTime,
-                  "files": selectedImages.map((e) => e.path).toList(),
-                });
+              onPressed: (selectedSlotTime == null)
+                  ? null
+                  : () async {
+                      if (selectedServiceId == null ||
+                          selectedDate == null ||
+                          selectedSlotTime == null ||
+                          selectedJewelleryType == null) {
+                        AppSnackbar.show(
+                          context,
+                          "Please fill all required fields",
+                          type: SnackType.error,
+                        );
+                        return;
+                      }
 
-                if (!mounted) return;
+                      await controller.createAppointment(
+                        serviceId: selectedServiceId!,
+                        jewelleryType: selectedJewelleryType!,
+                        date: formatDate(selectedDate!),
+                        slotTime: selectedSlotTime!,
+                        approxWeight: weightController.text.trim(),
+                        description: descriptionController.text.trim(),
+                        files: selectedImages,
+                      );
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Appointment Booked ✅")),
-                );
-              },
+                      if (!mounted) return;
+
+                      AppSnackbar.show(context, "Appointment Booked ✅");
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MainScreen(initialIndex: 2),
+                        ),
+                        (route) => false,
+                      );
+                    },
             ),
           ),
         ],
@@ -1248,6 +1475,41 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                       ),
                     ],
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ImagePreviewScreen extends StatelessWidget {
+  final File image;
+
+  const ImagePreviewScreen({super.key, required this.image});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Center(child: InteractiveViewer(child: Image.file(image))),
+
+          // ❌ Close button
+          Positioned(
+            top: 40,
+            right: 20,
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close, color: Colors.white),
+              ),
+            ),
           ),
         ],
       ),

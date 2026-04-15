@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ntl_app/core/components/card.dart';
+import 'package:ntl_app/core/components/coming_soon_badge.dart';
 import 'package:ntl_app/core/layout/layout.dart';
+import 'package:ntl_app/features/auth/signup/provider/signup_provider.dart';
 import 'package:ntl_app/features/home/ui/widgets/excellence_banner.dart';
 import 'package:ntl_app/features/home/ui/widgets/home_banner.dart';
 import 'package:ntl_app/features/home/ui/widgets/price_slider.dart';
 import 'package:ntl_app/features/home/ui/widgets/stats_card.dart';
+import 'package:ntl_app/features/service/booking/ui/booking_flow_page.dart';
 import 'package:ntl_app/features/service/provider/service_notifier.dart';
 import 'package:ntl_app/features/service/service_details/pages/service_details_page.dart';
 
@@ -22,6 +25,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.initState();
     Future.microtask(() {
       ref.read(servicesProvider.notifier).fetchServices();
+    });
+    Future.microtask(() {
+      ref.read(authProvider).fetchProfile();
     });
   }
 
@@ -67,7 +73,12 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Widget _appointmentCard() {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BookingPage()),
+        );
+      },
       child: Container(
         height: 130,
         decoration: BoxDecoration(
@@ -132,6 +143,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                 fontWeight: FontWeight.w900,
               ),
             ),
+            ComingSoonBadge(
+              backgroundColor: Colors.primary,
+              textColor: Colors.background,
+              baseShimmerColor: Colors.background,
+              highlightShimmerColor: Colors.primary,
+            ),
           ],
         ),
       ),
@@ -152,7 +169,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                 style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MainScreen(initialIndex: 1),
+                  ),
+                ),
                 child: Text(
                   "View All",
                   style: TextStyle(

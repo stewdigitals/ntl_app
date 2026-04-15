@@ -25,6 +25,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
               showBack: true,
               showRightBg: true,
               rightIcon: Icons.done,
+              onBack: () => Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const MainScreen(initialIndex: 0),
+                ),
+                (route) => false,
+              ),
             ),
             SizedBox(height: 20),
             Padding(

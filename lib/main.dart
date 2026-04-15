@@ -58,13 +58,13 @@ class MyApp extends StatelessWidget {
 
         cardColor: Colors.background,
       ),
-      home: MainScreen(),
+      home: const MainScreen(),
     );
   }
 }
 
 // Colors
-//   static const Color primary = Color(0xFFE31C23);
-//   static const Color secondary = Color(0xFF0F172A);
-//   static const Color accent = Color(0xFFD4AF35);
-//   static const Color background = Color(0xFFF8F6F6);
+  // static const Color primary = Color(0xFFE31C23);
+  // static const Color secondary = Color(0xFF0F172A);
+  // static const Color accent = Color(0xFFD4AF35);
+  // static const Color background = Color(0xFFF8F6F6);

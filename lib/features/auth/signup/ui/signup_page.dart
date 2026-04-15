@@ -51,7 +51,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
     await ref
         .read(authNotifierProvider.notifier)
-        .register(email: email, password: password, name: name, phone: phone);
+        .register(
+          email: email,
+          password: password,
+          name: name,
+          phone: phone,
+          context: context,
+        );
   }
 
   @override

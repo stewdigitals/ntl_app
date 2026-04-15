@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ntl_app/core/components/card.dart';
+import 'package:ntl_app/core/components/coming_soon_badge.dart';
 import 'package:ntl_app/features/service/ui/widgets/service_title.dart';
 
 class GoldLoanSection extends StatelessWidget {
@@ -12,7 +13,13 @@ class GoldLoanSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          buildTitle("Gold Loan Services", Colors.primary),
+          Row(
+            children: [
+              buildTitle("Gold Loan Services", Colors.primary),
+              const SizedBox(width: 8),
+              const ComingSoonBadge(),
+            ],
+          ),
 
           // 🧩 GRID
           GridView.count(

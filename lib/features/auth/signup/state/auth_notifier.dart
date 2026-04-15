@@ -31,6 +31,7 @@ class AuthNotifier extends StateNotifier<AuthState<AuthResponseModel>> {
     required String password,
     required String name,
     required String phone,
+    required BuildContext context,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -40,6 +41,7 @@ class AuthNotifier extends StateNotifier<AuthState<AuthResponseModel>> {
         password: password,
         name: name,
         phone: phone,
+        context: context,
       );
 
       state = state.copyWith(isLoading: false, data: res, action: "register");
@@ -50,15 +52,18 @@ class AuthNotifier extends StateNotifier<AuthState<AuthResponseModel>> {
     }
   }
 
-  Future<void> resendOtp({required String email}) async {
+  Future<void> resendOtp({
+    required String email,
+    required BuildContext context,
+  }) async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final res = await _authProvider.resendOtp(email: email);
+      final res = await _authProvider.resendOtp(email: email, context: context);
 
       state = state.copyWith(isLoading: false, data: res, action: "resendOtp");
       debugPrint("Resend OTP 🎉");
-      debugPrint("Resend OTP ${state.data?.token}");
+      debugPrint("Resend OTP ${state.data?.data?.token}");
     } on ApiException catch (e) {
       state = state.copyWith(isLoading: false, error: e.message);
     } catch (e) {
@@ -86,7 +91,7 @@ class AuthNotifier extends StateNotifier<AuthState<AuthResponseModel>> {
         action: "resetPassword",
       );
       debugPrint("Reset Password 🎉");
-      debugPrint("Reset Password ${state.data?.token}");
+      debugPrint("Reset Password ${state.data?.data?.token}");
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -105,7 +110,10 @@ class AuthNotifier extends StateNotifier<AuthState<AuthResponseModel>> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final res = await _authProvider.forgotPassword(email: email);
+      final res = await _authProvider.forgotPassword(
+        email: email,
+        context: context,
+      );
 
       state = state.copyWith(
         isLoading: false,
@@ -113,7 +121,7 @@ class AuthNotifier extends StateNotifier<AuthState<AuthResponseModel>> {
         action: "forgotPassword",
       );
       debugPrint("Forgot Password 🎉");
-      debugPrint("Forgot Password ${state.data?.token}");
+      debugPrint("Forgot Password ${state.data?.data?.token}");
     } on ApiException catch (e) {
       state = state.copyWith(isLoading: false, error: e.message);
     } catch (e) {
@@ -129,11 +137,15 @@ class AuthNotifier extends StateNotifier<AuthState<AuthResponseModel>> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final res = await _authProvider.verifyOtp(email: email, otp: otp);
+      final res = await _authProvider.verifyOtp(
+        email: email,
+        otp: otp,
+        context: context,
+      );
 
       state = state.copyWith(isLoading: false, data: res, action: "verifyOtp");
       debugPrint("OTP Verified 🎉");
-      debugPrint("OTP Verified ${state.data?.token}");
+      debugPrint("OTP Verified ${state.data?.data?.token}");
     } on ApiException catch (e) {
       state = state.copyWith(isLoading: false, error: e.message);
     } catch (e) {
@@ -144,19 +156,30 @@ class AuthNotifier extends StateNotifier<AuthState<AuthResponseModel>> {
     }
   }
 
-  Future<void> login({required String email, required String password}) async {
+  Future<void> login({
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final res = await _authProvider.login(email: email, password: password);
+      final res = await _authProvider.login(
+        email: email,
+        password: password,
+        context: context,
+      );
 
-      // ✅ STORE TOKEN
-      final token = res.token;
-      if (token != null && token.isNotEmpty) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', token);
-        debugPrint("💾 TOKEN SAVED: $token");
+      final token = res.data?.token;
+
+      if (token == null || token.isEmpty) {
+        throw Exception("Token not found");
       }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', token);
+
+      debugPrint("💾 TOKEN SAVED: $token");
 
       state = state.copyWith(isLoading: false, data: res, action: "login");
     } on ApiException catch (e) {

@@ -1,13 +1,14 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:ntl_app/core/layout/appbar.dart';
 import 'package:ntl_app/core/layout/bottomnav.dart';
+import 'package:ntl_app/features/appointments/ui/appointment_page.dart';
 import 'package:ntl_app/features/auth/login/ui/login_page.dart';
 import 'package:ntl_app/features/home/ui/home_page.dart';
-import 'package:ntl_app/features/profile/ui/pages/testing_report_page.dart';
 import 'package:ntl_app/features/profile/ui/profile_page.dart';
-import 'package:ntl_app/features/service/booking/ui/booking_flow_page.dart';
 import 'package:ntl_app/features/service/ui/service_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,19 +32,23 @@ class AppLayout extends StatelessWidget {
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int initialIndex;
+
+  const MainScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int currentIndex = 0;
+  late int currentIndex;
   bool isCheckingAuth = true;
 
   @override
   void initState() {
     super.initState();
+
+    currentIndex = widget.initialIndex;
     checkAuth();
   }
 
@@ -51,20 +56,17 @@ class _MainScreenState extends State<MainScreen> {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 
-    // ❌ No token → go login
     if (token == null || token.isEmpty) {
       redirectToLogin();
       return;
     }
 
-    // ⚠️ OPTIONAL: check expiry (if JWT)
     if (isTokenExpired(token)) {
       await prefs.remove('auth_token');
       redirectToLogin();
       return;
     }
 
-    // ✅ Token valid
     setState(() {
       isCheckingAuth = false;
     });
@@ -96,7 +98,7 @@ class _MainScreenState extends State<MainScreen> {
     Future.microtask(() {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => LoginPage()),
+        MaterialPageRoute(builder: (_) => const LoginPage()),
         (route) => false,
       );
     });
@@ -111,8 +113,7 @@ class _MainScreenState extends State<MainScreen> {
     final pages = [
       const HomePage(),
       const ServicePage(),
-      const BookingPage(),
-      const ReportsPage(),
+      const MyAppointmentsPage(),
       const ProfilePage(),
     ];
 

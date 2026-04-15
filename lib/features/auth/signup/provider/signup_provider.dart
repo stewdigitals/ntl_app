@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:ntl_app/features/auth/login/ui/login_page.dart';
 import 'package:ntl_app/features/auth/signup/store/signup.dart';
 import 'package:ntl_app/features/fetchService/app_logger.dart';
@@ -40,30 +41,53 @@ class AuthProvider {
   Future<AuthResponseModel> login({
     required String email,
     required String password,
+    required BuildContext context,
   }) async {
     const path = '/auth/login';
 
     try {
-      AppLogger.log("🔐 LOGIN START → $email");
+      AppSnackbar.show(context, "🔐 LOGIN START → $email");
 
       final response = await _fetch.post(
         path,
         body: {"email": email, "password": password},
       );
 
-      AppLogger.log("📦 LOGIN RESPONSE → $response");
+      AppSnackbar.show(context, "📦 LOGIN RESPONSE → $response");
 
       final model = _parseResponse(response);
 
-      AppLogger.success("✅ LOGIN SUCCESS → ${model.message}");
+      final token = model.data?.token;
+
+      if (token == null || token.isEmpty) {
+        AppSnackbar.show(
+          context,
+          "❌ Token missing in response",
+          type: SnackType.error,
+        );
+        throw ApiException(message: "Token not found");
+      }
+
+      // ✅ safe decode
+      final decoded = JwtDecoder.decode(token);
+
+      AppSnackbar.show(context, "🧠 DECODED → $decoded");
 
       return model;
     } on ApiException catch (e) {
-      AppLogger.error("❌ LOGIN API ERROR → ${e.message}");
+      AppSnackbar.show(
+        context,
+        "❌ LOGIN API ERROR → ${e.message}",
+        type: SnackType.error,
+      );
       rethrow; // 🔥 no need to wrap again
     } catch (e, stack) {
-      AppLogger.error("💥 LOGIN UNKNOWN ERROR → $e");
-      AppLogger.error("STACK → $stack");
+      AppSnackbar.show(
+        context,
+        "💥 LOGIN UNKNOWN ERROR → $e",
+        type: SnackType.error,
+      );
+      AppSnackbar.show(context, "STACK → $stack", type: SnackType.error);
 
       throw ApiException(message: "Login failed. Please try again.");
     }
@@ -77,11 +101,12 @@ class AuthProvider {
     required String password,
     required String name,
     required String phone,
+    required BuildContext context,
   }) async {
     const path = '/auth/register';
 
     try {
-      AppLogger.log("📝 REGISTER START → $email");
+      AppSnackbar.show(context, "📝 REGISTER START → $email");
 
       final response = await _fetch.post(
         path,
@@ -93,19 +118,27 @@ class AuthProvider {
         },
       );
 
-      AppLogger.log("📦 REGISTER RESPONSE → $response");
+      AppSnackbar.show(context, "📦 REGISTER RESPONSE → $response");
 
       final model = _parseResponse(response);
 
-      AppLogger.success("✅ REGISTER SUCCESS → ${model.message}");
+      AppSnackbar.show(context, "✅ REGISTER SUCCESS → ${model.message}");
 
       return model;
     } on ApiException catch (e) {
-      AppLogger.error("❌ REGISTER API ERROR → ${e.message}");
+      AppSnackbar.show(
+        context,
+        "❌ REGISTER API ERROR → ${e.message}",
+        type: SnackType.error,
+      );
       rethrow;
     } catch (e, stack) {
-      AppLogger.error("💥 REGISTER UNKNOWN ERROR → $e");
-      AppLogger.error("STACK → $stack");
+      AppSnackbar.show(
+        context,
+        "💥 REGISTER UNKNOWN ERROR → $e",
+        type: SnackType.error,
+      );
+      AppSnackbar.show(context, "STACK → $stack", type: SnackType.error);
 
       throw ApiException(message: "Registration failed. Please try again.");
     }
@@ -117,11 +150,12 @@ class AuthProvider {
   Future<AuthResponseModel> verifyOtp({
     required String email,
     required String otp,
+    required BuildContext context,
   }) async {
     const path = '/auth/verify-otp';
 
     try {
-      AppLogger.log("🔢 VERIFY OTP → $email");
+      AppSnackbar.show(context, "🔢 VERIFY OTP → $email");
 
       final response = await _fetch.post(
         path,
@@ -130,14 +164,22 @@ class AuthProvider {
 
       final model = _parseResponse(response);
 
-      AppLogger.success("✅ OTP VERIFIED");
+      AppSnackbar.show(context, "✅ OTP VERIFIED");
 
       return model;
     } on ApiException catch (e) {
-      AppLogger.error("❌ VERIFY OTP ERROR → ${e.message}");
+      AppSnackbar.show(
+        context,
+        "❌ VERIFY OTP ERROR → ${e.message}",
+        type: SnackType.error,
+      );
       rethrow;
     } catch (e) {
-      AppLogger.error("💥 OTP UNKNOWN ERROR → $e");
+      AppSnackbar.show(
+        context,
+        "💥 OTP UNKNOWN ERROR → $e",
+        type: SnackType.error,
+      );
       throw ApiException(message: "OTP verification failed");
     }
   }
@@ -145,24 +187,31 @@ class AuthProvider {
   // =========================
   // FORGOT PASSWORD
   // =========================
-  Future<AuthResponseModel> forgotPassword({required String email}) async {
+  Future<AuthResponseModel> forgotPassword({
+    required String email,
+    required BuildContext context,
+  }) async {
     const path = '/auth/forgot-password';
 
     try {
-      AppLogger.log("📩 FORGOT PASSWORD → $email");
+      AppSnackbar.show(context, "📩 FORGOT PASSWORD → $email");
 
       final response = await _fetch.post(path, body: {"email": email});
 
       final model = _parseResponse(response);
 
-      AppLogger.success("✅ OTP SENT");
+      AppSnackbar.show(context, "✅ OTP SENT");
 
       return model;
     } on ApiException catch (e) {
-      AppLogger.error("❌ FORGOT PASSWORD ERROR → ${e.message}");
+      AppSnackbar.show(
+        context,
+        "❌ FORGOT PASSWORD ERROR → ${e.message}",
+        type: SnackType.error,
+      );
       rethrow;
     } catch (e) {
-      AppLogger.error("💥 UNKNOWN ERROR → $e");
+      AppSnackbar.show(context, "💥 UNKNOWN ERROR → $e", type: SnackType.error);
       throw ApiException(message: "Failed to send OTP");
     }
   }
@@ -178,7 +227,7 @@ class AuthProvider {
     const path = '/auth/reset-password';
 
     try {
-      AppLogger.log("🔁 RESET PASSWORD → $email");
+      AppSnackbar.show(context, "🔁 RESET PASSWORD → $email");
 
       final response = await _fetch.post(
         path,
@@ -187,7 +236,7 @@ class AuthProvider {
 
       final model = _parseResponse(response);
 
-      AppLogger.success("✅ PASSWORD RESET SUCCESS");
+      AppSnackbar.show(context, "✅ PASSWORD RESET SUCCESS");
 
       Navigator.pushReplacement(
         context,
@@ -196,10 +245,14 @@ class AuthProvider {
 
       return model;
     } on ApiException catch (e) {
-      AppLogger.error("❌ RESET PASSWORD ERROR → ${e.message}");
+      AppSnackbar.show(
+        context,
+        "❌ RESET PASSWORD ERROR → ${e.message}",
+        type: SnackType.error,
+      );
       rethrow;
     } catch (e) {
-      AppLogger.error("💥 UNKNOWN ERROR → $e");
+      AppSnackbar.show(context, "💥 UNKNOWN ERROR → $e", type: SnackType.error);
       throw ApiException(message: "Password reset failed");
     }
   }
@@ -207,25 +260,47 @@ class AuthProvider {
   // =========================
   // RESEND OTP
   // =========================
-  Future<AuthResponseModel> resendOtp({required String email}) async {
+  Future<AuthResponseModel> resendOtp({
+    required String email,
+    required BuildContext context,
+  }) async {
     const path = '/auth/resend-otp';
 
     try {
-      AppLogger.log("🔄 RESEND OTP → $email");
+      AppSnackbar.show(context, "🔄 RESEND OTP → $email");
 
       final response = await _fetch.post(path, body: {"email": email});
 
       final model = _parseResponse(response);
 
-      AppLogger.success("✅ OTP RESENT");
+      AppSnackbar.show(context, "✅ OTP RESENT");
 
       return model;
     } on ApiException catch (e) {
-      AppLogger.error("❌ RESEND OTP ERROR → ${e.message}");
+      AppSnackbar.show(
+        context,
+        "❌ RESEND OTP ERROR → ${e.message}",
+        type: SnackType.error,
+      );
       rethrow;
     } catch (e) {
-      AppLogger.error("💥 UNKNOWN ERROR → $e");
+      AppSnackbar.show(context, "💥 UNKNOWN ERROR → $e", type: SnackType.error);
       throw ApiException(message: "Failed to resend OTP");
+    }
+  }
+
+  Future<ProfileModel?> fetchProfile() async {
+    try {
+      final res = await _fetch.get("/auth/profile", auth: true);
+
+      final profile = ProfileModel.fromJson(res['data']);
+
+      debugPrint("👤 PROFILE → ${profile.name}");
+
+      return profile;
+    } catch (e) {
+      debugPrint("❌ PROFILE ERROR: $e");
+      return null;
     }
   }
 

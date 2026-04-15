@@ -205,7 +205,7 @@ class _OTPPageState extends ConsumerState<OTPPage> {
                 onPressed: () {
                   ref
                       .read(authNotifierProvider.notifier)
-                      .resendOtp(email: widget.email);
+                      .resendOtp(email: widget.email, context: context);
                 },
                 child: const Text(
                   "Resend OTP",

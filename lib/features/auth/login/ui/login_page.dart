@@ -7,7 +7,6 @@ import 'package:ntl_app/core/layout/layout.dart';
 import 'package:ntl_app/features/auth/otp-verification.dart/ui/otp_page.dart';
 import 'package:ntl_app/features/auth/signup/state/auth_notifier.dart';
 import 'package:ntl_app/features/auth/signup/ui/signup_page.dart';
-import 'package:ntl_app/features/home/ui/home_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -58,14 +57,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F6F6),
       body: SafeArea(
+        top: false,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 10),
-
-              /// 🔴 Logo + Title
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -279,7 +276,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                         await ref
                             .read(authNotifierProvider.notifier)
-                            .login(email: email, password: password);
+                            .login(
+                              email: email,
+                              password: password,
+                              context: context,
+                            );
                       },
               ),
 

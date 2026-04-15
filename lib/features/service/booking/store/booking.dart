@@ -30,7 +30,7 @@ class AppointmentStore extends StateNotifier<AppointmentStoreData> {
   AppointmentStore() : super(const AppointmentStoreData());
 
   // ✅ store appointments
-  void setAppointments(List<dynamic> data) {
+  void setAppointments(List<dynamic>? data) {
     state = state.copyWith(appointments: data);
   }
 

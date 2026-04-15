@@ -132,6 +132,19 @@ class FetchService {
     showSuccessToast: showSuccessToast,
   );
 
+  Future<dynamic> patch(
+    String path, {
+    bool auth = false,
+    dynamic body,
+    bool showSuccessToast = false,
+  }) => _request(
+    'PATCH',
+    path,
+    auth: auth,
+    body: body,
+    showSuccessToast: showSuccessToast,
+  );
+
   // =========================
   // SUCCESS HANDLER
   // =========================
@@ -159,6 +172,27 @@ class FetchService {
     }
 
     return ApiException(statusCode: statusCode, message: message);
+  }
+
+  Future<Map<String, dynamic>> postMultipart(
+    String url, {
+    required FormData formData,
+    bool auth = false,
+  }) async {
+    final headers = <String, String>{};
+
+    if (auth) {
+      final token = await _getToken!();
+      headers['Authorization'] = "Bearer $token";
+    }
+
+    final res = await _dio.post(
+      url,
+      data: formData,
+      options: Options(headers: headers, contentType: "multipart/form-data"),
+    );
+
+    return res.data;
   }
 }
 

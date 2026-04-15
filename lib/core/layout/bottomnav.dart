@@ -31,9 +31,8 @@ class CustomBottomNavBar extends StatelessWidget {
               children: [
                 _item(Icons.home, "Home", 0),
                 _item(Icons.grid_view, "Services", 1),
-                _item(Icons.calendar_today, "Bookings", 2),
-                _item(Icons.description, "Reports", 3),
-                _item(Icons.person, "Profile", 4),
+                _item(Icons.calendar_today, "Appointments", 2),
+                _item(Icons.person, "Profile", 3),
               ],
             ),
           ),
