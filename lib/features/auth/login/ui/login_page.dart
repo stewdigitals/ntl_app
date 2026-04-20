@@ -7,6 +7,7 @@ import 'package:ntl_app/core/layout/layout.dart';
 import 'package:ntl_app/features/auth/otp-verification.dart/ui/otp_page.dart';
 import 'package:ntl_app/features/auth/signup/state/auth_notifier.dart';
 import 'package:ntl_app/features/auth/signup/ui/signup_page.dart';
+import 'package:ntl_app/features/fetchService/app_logger.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -21,9 +22,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   bool isPasswordVisible = false;
 
   void showSnack(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    AppSnackbar.show(context, message);
   }
 
   @override

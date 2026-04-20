@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// PROFILE PAGE (PREMIUM)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,12 +6,52 @@ import 'package:ntl_app/core/components/custom_topbar.dart';
 import 'package:ntl_app/core/components/horizontal_card.dart';
 import 'package:ntl_app/core/layout/layout.dart';
 import 'package:ntl_app/features/auth/signup/provider/signup_provider.dart';
+import 'package:ntl_app/features/auth/signup/store/signup.dart';
+import 'package:ntl_app/features/profile/store/profile.dart';
+import 'package:ntl_app/features/profile/ui/pages/faqs.dart';
+import 'package:ntl_app/features/profile/ui/pages/privacy_policy.dart';
+import 'package:ntl_app/features/profile/ui/pages/support_page.dart';
+import 'package:ntl_app/features/profile/ui/pages/terms_and_conditions.dart';
+import 'package:ntl_app/features/service/booking/provider/booking_provider.dart';
+import 'package:ntl_app/features/service/booking/store/booking.dart';
 
-class ProfilePage extends ConsumerWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends ConsumerState<ProfilePage> {
+  ProfileModel? user;
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() async {
+      final profile = await ref.read(authProvider).fetchProfile();
+      setState(() => user = profile);
+
+      await ref
+          .read(appointmentControllerProvider.notifier)
+          .fetchAppointments();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final store = ref.watch(appointmentStoreProvider);
+    final appointments = store.appointments;
+
+    final total = appointments.length;
+    final cancelled = appointments
+        .where((a) => a['status'] == 'cancelled')
+        .length;
+    final upcoming = appointments
+        .where((a) => a['status'] == 'scheduled')
+        .length;
+
     return AppLayout(
       child: Column(
         children: [
@@ -21,92 +61,129 @@ class ProfilePage extends ConsumerWidget {
             showRightIcon: true,
             rightIcon: Icons.settings,
           ),
+
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  /// 👤 PROFILE CARD
                   ProfileHeaderCard(
-                    name: "Nagesh Touch Lab",
-                    imageUrl:
-                        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    name: user?.name ?? "User",
+                    imageUrl: "https://i.pravatar.cc/300",
                     isGoldMember: true,
-                    isVerified: true,
-                    onEditTap: () {
-                      debugPrint("Edit clicked");
-                    },
+                    isVerified: user?.verified ?? false,
                   ),
-                  const SizedBox(height: 20),
-
-                  const StatsRow(),
 
                   const SizedBox(height: 20),
 
-                  const SectionTitle("LABORATORY MANAGEMENT"),
+                  /// 📊 PREMIUM STATS
+                  Row(
+                    children: [
+                      Expanded(child: _stat("TOTAL", total.toString())),
+                      const SizedBox(width: 10),
+                      Expanded(child: _stat("UPCOMING", upcoming.toString())),
+                      const SizedBox(width: 10),
+                      Expanded(child: _stat("CANCELLED", cancelled.toString())),
+                    ],
+                  ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 24),
+
+                  sectionTitle("ACCOUNT"),
+                  SizedBox(height: 10),
 
                   MenuList(
                     items: [
-                      MenuItemData(
-                        "My Reports",
-                        "Access all testing certificates",
-                        Icons.description,
-                        Colors.primary,
-                      ),
                       MenuItemData(
                         "Booking History",
-                        "Manage your testing appointments",
-                        Icons.calendar_today,
-                        Colors.accent,
-                      ),
-                      MenuItemData(
-                        "Manage Business Details",
-                        "Store location, hours, and branding",
-                        Icons.store,
-                        Colors.icon,
-                      ),
-                      MenuItemData(
-                        "Address Book",
-                        "Saved pickup and delivery locations",
-                        Icons.location_on,
-                        Colors.icon,
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  const SectionTitle("ACCOUNT SETTINGS"),
-
-                  const SizedBox(height: 10),
-
-                  MenuList(
-                    items: [
-                      MenuItemData(
-                        "Security",
                         "",
-                        Icons.shield_outlined,
-                        Colors.grey,
-                      ),
-                      MenuItemData(
-                        "Notifications",
-                        "2 NEW",
-                        Icons.notifications,
-                        Colors.grey,
-                      ),
-                      MenuItemData(
-                        "Language",
-                        "English (US)",
-                        Icons.language,
-                        Colors.grey,
+                        Icons.calendar_today,
+                        Colors.primary,
+                        () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const MainScreen(initialIndex: 2),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
-                  const SignOutButton(),
+                  sectionTitle("ABOUT"),
+                  SizedBox(height: 10),
 
-                  const SizedBox(height: 20),
+                  HorizontalCard(
+                    title: "FAQs",
+                    subtitle: "Frequently Asked Questions",
+                    icon: Icons.question_mark,
+                    iconBg: Colors.primary.withValues(alpha: 0.1),
+                    iconColor: Colors.primary,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => FaqsPage()),
+                      );
+                    },
+                    showIconShadow: false,
+                    showBorder: false,
+                  ),
+
+                  HorizontalCard(
+                    title: "Terms & Conditions",
+                    subtitle: "Read our terms and conditions",
+                    icon: Icons.document_scanner,
+                    iconBg: Colors.primary.withValues(alpha: 0.1),
+                    iconColor: Colors.primary,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TermsAndConditionsPage(),
+                        ),
+                      );
+                    },
+                    showIconShadow: false,
+                    showBorder: false,
+                  ),
+
+                  HorizontalCard(
+                    title: "Privacy Policy",
+                    subtitle: "Read our privacy policy",
+                    icon: Icons.privacy_tip,
+                    iconBg: Colors.primary.withValues(alpha: 0.1),
+                    iconColor: Colors.primary,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PrivacyPolicyPage(),
+                        ),
+                      );
+                    },
+                    showIconShadow: false,
+                    showBorder: false,
+                  ),
+
+                  HorizontalCard(
+                    title: "Support",
+                    subtitle: "Contact us for help",
+                    icon: Icons.support_agent,
+                    iconBg: Colors.primary.withValues(alpha: 0.1),
+                    iconColor: Colors.primary,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => SupportPage()),
+                      );
+                    },
+                    showIconShadow: false,
+                    showBorder: false,
+                  ),
+
+                  const SignOutButton(),
                 ],
               ),
             ),
@@ -115,73 +192,49 @@ class ProfilePage extends ConsumerWidget {
       ),
     );
   }
-}
 
-class StatsRow extends StatelessWidget {
-  const StatsRow({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: const [
-        Expanded(child: _StatCard("TOTAL REPORTS", "1,284")),
-        SizedBox(width: 10),
-        Expanded(child: _StatCard("TRUST SCORE", "9.8/10", highlight: true)),
-      ],
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final bool highlight;
-
-  const _StatCard(this.title, this.value, {this.highlight = false});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _stat(String title, String value) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        gradient: const LinearGradient(colors: [Colors.secondary, Colors.icon]),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Text(
             title,
             style: const TextStyle(
-              fontSize: 12,
-              color: Colors.icon,
-              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: highlight ? Colors.accent : Colors.black,
+              color: Colors.white,
             ),
           ),
         ],
       ),
     );
   }
-}
 
-class SectionTitle extends StatelessWidget {
-  final String title;
-  const SectionTitle(this.title, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget sectionTitle(String text) {
     return Text(
-      title,
+      text,
       style: const TextStyle(
-        fontSize: 11,
-        letterSpacing: 1,
+        fontSize: 12,
         color: Colors.grey,
         fontWeight: FontWeight.w600,
       ),
@@ -189,13 +242,128 @@ class SectionTitle extends StatelessWidget {
   }
 }
 
-class MenuItemData {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color iconBg;
+class ProfileHeaderCard extends StatelessWidget {
+  final String name;
+  final String imageUrl;
+  final bool isGoldMember;
+  final bool isVerified;
 
-  MenuItemData(this.title, this.subtitle, this.icon, this.iconBg);
+  const ProfileHeaderCard({
+    super.key,
+    required this.name,
+    required this.imageUrl,
+    this.isGoldMember = false,
+    this.isVerified = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xff0f172a), Color(0xff1e293b), Color(0xff334155)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: .10),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          /// Premium Icon Avatar ✨
+          Container(
+            height: 92,
+            width: 92,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xffffd66b), Color(0xffffb800)],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.amber.withValues(alpha: .35),
+                  blurRadius: 18,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Container(
+              margin: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              child: const Icon(
+                Icons.person_rounded,
+                size: 48,
+                color: Color(0xff0f172a),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: [
+              if (isVerified)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: .15),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.verified_rounded,
+                        color: Colors.greenAccent,
+                        size: 16,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        "Verified",
+                        style: TextStyle(
+                          color: Colors.greenAccent,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class MenuList extends StatelessWidget {
@@ -207,23 +375,43 @@ class MenuList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: items.map((e) {
-        return HorizontalCard(
-          title: e.title,
-          subtitle: e.subtitle,
-          icon: e.icon,
-
-          // 🎨 Styling (you can tweak globally here)
-          iconColor: e.iconBg,
-          iconBg: e.iconBg.withValues(alpha: 0.1),
-
-          // 👉 Optional behavior
-          onTap: () {
-            debugPrint("${e.title} clicked");
-          },
-
-          showIconShadow: false,
-
-          showArrow: true,
+        return GestureDetector(
+          onTap: e.onTap,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: e.iconBg.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(e.icon, color: e.iconBg),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    e.title,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios, size: 14),
+              ],
+            ),
+          ),
         );
       }).toList(),
     );
@@ -237,146 +425,12 @@ class SignOutButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return TextButton.icon(
       onPressed: () async {
-        final confirm = await showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text("Sign Out"),
-            content: const Text("Are you sure you want to sign out?"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text("Sign Out"),
-              ),
-            ],
-          ),
-        );
-
-        if (confirm == true) {
-          await ref.read(authProvider).logout(context);
-        }
+        await ref.read(authProvider).logout(context);
       },
-      icon: const Icon(
-        Icons.logout,
-        color: Colors.red, // ✅ fixed
-      ),
+      icon: const Icon(Icons.logout, color: Colors.red),
       label: const Text(
         "Sign Out",
-        style: TextStyle(
-          color: Colors.red, // ✅ fixed
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class ProfileHeaderCard extends StatelessWidget {
-  final String name;
-  final String imageUrl;
-  final bool isGoldMember;
-  final bool isVerified;
-  final VoidCallback? onEditTap;
-
-  const ProfileHeaderCard({
-    super.key,
-    required this.name,
-    required this.imageUrl,
-    this.isGoldMember = false,
-    this.isVerified = false,
-    this.onEditTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(shape: BoxShape.circle),
-              child: CircleAvatar(
-                radius: 70,
-                backgroundImage: NetworkImage(imageUrl),
-              ),
-            ),
-
-            Positioned(
-              bottom: 8,
-              right: 10,
-              child: GestureDetector(
-                onTap: onEditTap,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.primary,
-                    border: Border.all(color: Colors.white, width: 3),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.verified_outlined,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 12),
-
-        // Name
-        Text(
-          name,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-
-        const SizedBox(height: 10),
-
-        // Badges
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isGoldMember)
-              _badge(
-                "GOLD MEMBER",
-                Colors.accent.withValues(alpha: 0.05),
-                Colors.accent,
-              ),
-            if (isGoldMember && isVerified) const SizedBox(width: 8),
-            if (isVerified)
-              _badge(
-                "VERIFIED JEWELLER",
-                Colors.primary.withValues(alpha: 0.05),
-                Colors.primary,
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _badge(String text, Color bgColor, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: textColor,
-        ),
+        style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
       ),
     );
   }

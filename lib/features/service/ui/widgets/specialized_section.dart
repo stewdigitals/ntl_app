@@ -94,15 +94,6 @@ class _FeatureCard extends StatelessWidget {
                   "Official BIS hallmarking services for purity certification.",
                   style: TextStyle(fontSize: 13, color: Colors.black54),
                 ),
-                SizedBox(height: 8),
-                Text(
-                  "GET CERTIFIED →",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.red,
-                  ),
-                ),
               ],
             ),
           ),

@@ -58,7 +58,7 @@ class MyApp extends StatelessWidget {
 
         cardColor: Colors.background,
       ),
-      home: const MainScreen(),
+      home: const AuthGate(),
     );
   }
 }

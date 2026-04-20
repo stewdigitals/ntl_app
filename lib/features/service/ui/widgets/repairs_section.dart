@@ -22,7 +22,6 @@ class RepairsSection extends StatelessWidget {
             icon: Icons.build,
             onTap: () {},
           ),
-          SizedBox(height: 30),
         ],
       ),
     );
@@ -105,7 +104,6 @@ class RepairCard extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 300),
       ],
     );
   }

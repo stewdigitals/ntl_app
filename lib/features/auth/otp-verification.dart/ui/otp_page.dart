@@ -7,6 +7,7 @@ import 'package:ntl_app/features/auth/login/ui/forgot_password.dart';
 import 'package:ntl_app/features/auth/login/ui/login_page.dart';
 import 'package:ntl_app/features/auth/signup/state/auth_notifier.dart';
 import 'package:ntl_app/features/auth/signup/ui/signup_page.dart';
+import 'package:ntl_app/features/fetchService/app_logger.dart';
 
 class OTPPage extends ConsumerStatefulWidget {
   final String email;
@@ -28,9 +29,7 @@ class _OTPPageState extends ConsumerState<OTPPage> {
   bool isPasswordVisible = false;
 
   void showSnack(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    AppSnackbar.show(context, message);
   }
 
   @override

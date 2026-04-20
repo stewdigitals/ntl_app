@@ -2,8 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:ntl_app/features/auth/login/ui/login_page.dart';
+import 'package:ntl_app/features/auth/signup/state/signup_state.dart';
 import 'package:ntl_app/features/auth/signup/store/signup.dart';
 import 'package:ntl_app/features/fetchService/app_logger.dart';
 import 'package:ntl_app/features/fetchService/fetchService.dart';
@@ -68,10 +69,7 @@ class AuthProvider {
         throw ApiException(message: "Token not found");
       }
 
-      // ✅ safe decode
-      final decoded = JwtDecoder.decode(token);
-
-      AppSnackbar.show(context, "🧠 DECODED → $decoded");
+      AppSnackbar.show(context, "Login Success");
 
       return model;
     } on ApiException catch (e) {
@@ -315,5 +313,47 @@ class AuthProvider {
       context,
       MaterialPageRoute(builder: (_) => const LoginPage()),
     );
+    AppSnackbar.show(context, "LOGOUT SUCCESS");
+  }
+}
+
+final supportProvider = StateNotifierProvider<SupportNotifier, SupportState>((
+  ref,
+) {
+  final store = ref.read(supportStoreProvider);
+  return SupportNotifier(store);
+});
+
+class SupportNotifier extends StateNotifier<SupportState> {
+  final SupportStore _store;
+
+  SupportNotifier(this._store) : super(const SupportState());
+
+  Future<void> submitSupport({
+    required String name,
+    required String phone,
+    required String email,
+    required String message,
+    required String service,
+  }) async {
+    state = state.copyWith(isLoading: true, isSuccess: false, error: null);
+
+    try {
+      final res = await _store.sendSupport(
+        name: name,
+        phone: phone,
+        email: email,
+        message: message,
+        service: service,
+      );
+
+      state = state.copyWith(isLoading: false, isSuccess: true, data: res);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  void reset() {
+    state = const SupportState();
   }
 }

@@ -160,9 +160,7 @@ class AppointmentController extends StateNotifier<AppointmentState> {
       final url = data['reportUrl'];
 
       if (url == null || url.toString().isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("No report found ❌")));
+        AppSnackbar.show(context, "No report found ❌", type: SnackType.error);
         return;
       }
 
@@ -185,8 +183,10 @@ class AppointmentController extends StateNotifier<AppointmentState> {
         }
 
         if (!status.isGranted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Storage permission denied ❌")),
+          AppSnackbar.show(
+            context,
+            "Storage permission denied ❌",
+            type: SnackType.error,
           );
           return;
         }
@@ -260,20 +260,22 @@ class AppointmentController extends StateNotifier<AppointmentState> {
       final result = await OpenFilex.open(filePath);
 
       if (result.type != ResultType.done) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("File downloaded but cannot open")),
+        AppSnackbar.show(
+          context,
+          "File downloaded but cannot open",
+          type: SnackType.error,
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Saved to Downloads ✅\n$fileName")),
+        AppSnackbar.show(
+          context,
+          "Saved to Downloads ✅\n$fileName",
+          type: SnackType.success,
         );
       }
     } catch (e) {
       Navigator.pop(context);
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Download failed ❌")));
+      AppSnackbar.show(context, "Download failed ❌", type: SnackType.error);
     }
   }
 

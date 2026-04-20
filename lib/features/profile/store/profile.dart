@@ -4,9 +4,10 @@ class MenuItemData {
   final String title;
   final String subtitle;
   final IconData icon;
-  final Gradient? gradient;
+  final Color iconBg;
+  final VoidCallback onTap;
 
-  MenuItemData(this.title, this.subtitle, this.icon, {this.gradient});
+  MenuItemData(this.title, this.subtitle, this.icon, this.iconBg, this.onTap);
 }
 
 class NotificationItem {

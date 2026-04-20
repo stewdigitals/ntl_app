@@ -1,5 +1,7 @@
 // ignore_for_file: unnecessary_import, use_build_context_synchronously
 
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -24,6 +26,42 @@ class AuthNotifier extends StateNotifier<AuthState<AuthResponseModel>> {
 
   void clearState() {
     state = AuthState<AuthResponseModel>();
+  }
+
+  bool isTokenExpired(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return true;
+
+      final payload = utf8.decode(
+        base64Url.decode(base64Url.normalize(parts[1])),
+      );
+      final Map<String, dynamic> data = jsonDecode(payload);
+
+      final exp = data['exp']; // expiry timestamp
+      final now = DateTime.now().millisecondsSinceEpoch / 1000;
+
+      return now > exp;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  Future<bool> isLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    if (token == null || token.isEmpty) {
+      return false;
+    }
+
+    // OPTIONAL: check expiry if JWT
+    if (isTokenExpired(token)) {
+      await prefs.remove('auth_token');
+      return false;
+    }
+
+    return true;
   }
 
   Future<void> register({

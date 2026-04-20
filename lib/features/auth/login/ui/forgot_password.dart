@@ -6,6 +6,7 @@ import 'package:ntl_app/core/components/button.dart';
 import 'package:ntl_app/features/auth/login/ui/login_page.dart';
 import 'package:ntl_app/features/auth/signup/state/auth_notifier.dart';
 import 'package:ntl_app/features/auth/signup/ui/signup_page.dart';
+import 'package:ntl_app/features/fetchService/app_logger.dart';
 
 class ResetPasswordPage extends ConsumerStatefulWidget {
   final String email;
@@ -24,9 +25,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   bool isConfirmPasswordVisible = false;
 
   void showSnack(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    AppSnackbar.show(context, message);
   }
 
   @override

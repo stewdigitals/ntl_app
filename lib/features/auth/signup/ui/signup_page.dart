@@ -4,6 +4,7 @@ import 'package:ntl_app/core/components/button.dart';
 import 'package:ntl_app/features/auth/login/ui/login_page.dart';
 import 'package:ntl_app/features/auth/otp-verification.dart/ui/otp_page.dart';
 import 'package:ntl_app/features/auth/signup/state/auth_notifier.dart';
+import 'package:ntl_app/features/fetchService/app_logger.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -303,9 +304,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   }
 
   void showSnack(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    AppSnackbar.show(context, message);
   }
 
   /// 🔹 Input Field Widget

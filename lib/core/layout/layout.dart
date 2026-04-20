@@ -3,10 +3,13 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:ntl_app/core/layout/appbar.dart';
 import 'package:ntl_app/core/layout/bottomnav.dart';
 import 'package:ntl_app/features/appointments/ui/appointment_page.dart';
 import 'package:ntl_app/features/auth/login/ui/login_page.dart';
+import 'package:ntl_app/features/auth/signup/state/auth_notifier.dart';
 import 'package:ntl_app/features/home/ui/home_page.dart';
 import 'package:ntl_app/features/profile/ui/profile_page.dart';
 import 'package:ntl_app/features/service/ui/service_page.dart';
@@ -128,5 +131,125 @@ class _MainScreenState extends State<MainScreen> {
         },
       ),
     );
+  }
+}
+
+class AuthGate extends ConsumerStatefulWidget {
+  const AuthGate({super.key});
+
+  @override
+  ConsumerState<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends ConsumerState<AuthGate> {
+  @override
+  void initState() {
+    super.initState();
+    checkAuth();
+  }
+
+  Future<void> checkAuth() async {
+    final loggedIn = await ref.read(authNotifierProvider.notifier).isLoggedIn();
+
+    if (loggedIn) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 🔵 Animated Loader
+              SizedBox(height: 60, width: 60, child: PremiumLoader()),
+
+              const SizedBox(height: 24),
+
+              // 🧠 Brand Text
+              Text(
+                "Please wait...",
+                style: GoogleFonts.spaceGrotesk(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.5,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                "Checking authentication",
+                style: GoogleFonts.spaceGrotesk(
+                  color: Colors.white70,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class PremiumLoader extends StatefulWidget {
+  const PremiumLoader({super.key});
+
+  @override
+  State<PremiumLoader> createState() => _PremiumLoaderState();
+}
+
+class _PremiumLoaderState extends State<PremiumLoader>
+    with SingleTickerProviderStateMixin {
+  late AnimationController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: Tween(begin: 0.8, end: 1.2).animate(controller),
+      child: Container(
+        height: 50,
+        width: 50,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xFFD4AF35),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 }
